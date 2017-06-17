@@ -12,12 +12,13 @@ import (
 )
 
 func main() {
-	var usrName, usrPas, stashHost, prjKey string
+	var usrName, usrPas, stashHost, prjKey, branch string
 
 	flag.StringVar(&stashHost, "bp", "https://some-stash-host.net", "Stash host")
 	flag.StringVar(&usrName, "un", "name", "Stash user name")
 	flag.StringVar(&usrPas, "up", "pass", "Stash user pass")
 	flag.StringVar(&prjKey, "pk", "project", "Project Key")
+	flag.StringVar(&branch, "br", "master", "repo branch")
 
 	flag.Parse()
 
@@ -47,7 +48,7 @@ func main() {
 
 		gitCmd = fmt.Sprintf("%s%s@%s/scm/%s/%s.git", stashHost[:8], usrName, stashHost[8:], strings.ToLower(prjKey), p.Slug)
 		println(gitCmd)
-		gc = exec.Command("git", "clone", gitCmd)
+		gc = exec.Command("git", "clone", "-b", branch, gitCmd)
 		err = gc.Run()
 		if err != nil {
 			println(err.Error())

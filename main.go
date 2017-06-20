@@ -16,7 +16,7 @@ import (
 func ExecuteCMD(usrName, usrPas, stashHost, prjKey, branch string, p stash.Repository, wg *sync.WaitGroup) {
 	defer wg.Done()
 	gitCmd := fmt.Sprintf("%s%s@%s/scm/%s/%s.git", stashHost[:8], usrName, stashHost[8:], strings.ToLower(prjKey), p.Slug)
-	var gc = *exec.Command("git", "clone", "-b", branch, gitCmd)
+	gc := exec.Command("git", "clone", "-b", branch, gitCmd)
 	err := gc.Run()
 	if err != nil {
 		fmt.Println(err.Error())

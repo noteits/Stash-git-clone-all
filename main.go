@@ -13,15 +13,15 @@ import (
 )
 
 // ExecuteCMD executes cmd command for inputed params.
-func ExecuteCMD(usrName, usrPas, stashHost, prjKey, branch string, p stash.Repository, output chan string, wg *sync.WaitGroup, err error) {
+func ExecuteCMD(usrName, usrPas, stashHost, prjKey, branch string, p stash.Repository, wg *sync.WaitGroup) {
 	defer wg.Done()
 	gitCmd := fmt.Sprintf("%s%s@%s/scm/%s/%s.git", stashHost[:8], usrName, stashHost[8:], strings.ToLower(prjKey), p.Slug)
 	var gc = *exec.Command("git", "clone", "-b", branch, gitCmd)
-	err = gc.Run()
+	err := gc.Run()
 	if err != nil {
-		output <- err.Error()
+		fmt.Println(err.Error())
 	}
-	output <- gitCmd
+	fmt.Println(gitCmd)
 }
 
 func main() {
@@ -39,8 +39,6 @@ func main() {
 
 	flag.Parse()
 
-	response := make(chan string)
-
 	bu, err := url.Parse(stashHost)
 	if err != nil {
 		log.Fatal(err)
@@ -57,25 +55,14 @@ func main() {
 	for i := range prjSet {
 		p = prjSet[i]
 		if p.Project.Key != prjKey {
-			delete(prjSet, i)
+			continue
 		}
+		wg.Add(1)
+		go ExecuteCMD(usrName, usrPas, stashHost, prjKey, branch, prjSet[i], &wg)
 		//gitCmd = fmt.Sprintf("git clone https://%s@%s/scm/%s/%s.git", usrName, stashHost, prjKey, p.Slug)
 		//println(gitCmd)
 
 		//println(prjSet[i].Name, prjSet[i].Slug)
 	}
-
-	(&wg).Add(len(prjSet))
-
-	for i := range prjSet {
-		go ExecuteCMD(usrName, usrPas, stashHost, prjKey, branch, prjSet[i], response, &wg, err)
-	}
-
-	go func() {
-		for i := range response {
-			fmt.Println(i)
-		}
-	}()
-
 	wg.Wait()
 }
